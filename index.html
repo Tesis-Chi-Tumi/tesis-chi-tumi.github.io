@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detección temprana de fallas en rodamientos de maquinaria pesada</title>
+<meta name="description" content="Trabajo de investigación de Ingeniería de Software (UPC): sistema IoT con inteligencia artificial que detecta a tiempo las fallas en los rodamientos de la maquinaria pesada.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilos.css">
+<style>
+  body { background: var(--papel); }
+  .contenedor { width: min(1180px, 100% - 48px); margin-inline: auto; }
+
+  /* Navegación */
+  .nav { display: flex; align-items: center; gap: 28px; padding: 18px 0; }
+  .nav .marca { color: var(--tinta); }
+  .nav .marca-nombre { font-size: 1rem; }
+  .nav-enlaces { display: flex; gap: 22px; margin-left: auto; font-size: .93rem; }
+  .nav-enlaces a { text-decoration: none; color: var(--tinta-2); }
+  .nav-enlaces a:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+  /* Portada: titular a la izquierda, la alerta tal como la recibe el usuario a la derecha */
+  .portada { padding: 52px 0 0; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 56px; align-items: center; }
+  .contexto { color: var(--acero); font-size: .95rem; margin-bottom: 18px; }
+  .portada h1 { font-size: clamp(2.3rem, 4.6vw, 4.1rem); font-weight: 750; font-stretch: 118%; letter-spacing: -.028em; line-height: 1.02; }
+  .portada p.bajada { font-size: 1.12rem; color: var(--tinta-2); max-width: 52ch; margin-top: 22px; }
+  .botones { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 28px; }
+  .btn-grande { padding: .8rem 1.3rem; font-size: 1rem; }
+
+  .ejemplo { position: relative; }
+  .ejemplo-pie { font-size: .82rem; color: var(--acero); margin-top: 12px; }
+  .tarjeta-alerta { background: var(--superficie); border: 1px solid #E9B7B2; border-radius: 12px; padding: 22px 24px; box-shadow: 0 1px 2px rgba(21,33,47,.06), 0 14px 32px rgba(21,33,47,.08); display: grid; gap: 14px; }
+  .tarjeta-alerta .fila { display: flex; gap: 8px; flex-wrap: wrap; }
+  .plazo { display: inline-flex; align-items: center; gap: .35rem; padding: .15rem .6rem; border-radius: 999px; font-size: .82rem; font-weight: 600; background: var(--tinta); color: #fff; }
+  .plazo svg { width: 13px; height: 13px; }
+  .tarjeta-alerta h2 { font-size: 1.35rem; font-weight: 700; font-stretch: 108%; }
+  .tarjeta-alerta .que { font-size: 1.05rem; }
+  .tarjeta-alerta dl { margin: 0; display: grid; gap: 10px; border-top: 1px solid var(--linea-suave); padding-top: 14px; }
+  .tarjeta-alerta dt { font-size: .8rem; color: var(--acero); }
+  .tarjeta-alerta dd { margin: 2px 0 0; color: var(--tinta-2); }
+  .tarjeta-alerta .btn { justify-self: start; }
+
+  /* Secciones */
+  section.bloque { padding: 104px 0 0; }
+  .bloque h2 { font-size: clamp(1.7rem, 3vw, 2.4rem); font-weight: 700; font-stretch: 115%; letter-spacing: -.02em; max-width: 24ch; }
+  .bloque .intro { color: var(--tinta-2); font-size: 1.05rem; max-width: 64ch; margin-top: 14px; }
+
+  /* El problema */
+  .problema { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
+  .contraste { display: grid; gap: 12px; }
+  .contraste div { background: var(--superficie); border: 1px solid var(--linea); border-radius: var(--r-medio); padding: 18px 20px; }
+  .contraste h3 { font-size: 1rem; font-weight: 650; margin-bottom: 4px; }
+  .contraste p { color: var(--tinta-2); font-size: .95rem; }
+  .contraste .con { border-color: var(--tinta); }
+
+  /* Cómo funciona: secuencia real, por eso va numerada */
+  .pasos { list-style: none; margin: 40px 0 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); counter-reset: paso; }
+  .paso { position: relative; padding: 0 20px 0 0; counter-increment: paso; }
+  .paso::before { content: counter(paso); display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--superficie); border: 2px solid var(--tinta); font-weight: 700; position: relative; z-index: 1; }
+  .paso::after { content: ""; position: absolute; top: 17px; left: 34px; right: 0; border-top: 2px solid var(--tinta); }
+  .paso:last-child::after { display: none; }
+  .paso:nth-child(4)::before { background: var(--amarillo); }
+  .paso h3 { font-size: 1.05rem; font-weight: 650; margin: 16px 0 6px; }
+  .paso p { color: var(--tinta-2); font-size: .93rem; }
+  .paso small { display: block; color: var(--acero); font-size: .8rem; margin-top: 10px; }
+
+  /* Cómo sabe qué parte falla */
+  .partes { display: grid; grid-template-columns: 300px 1fr; gap: 48px; align-items: center; margin-top: 40px; }
+  .rodamiento { margin: 0; display: grid; gap: 12px; }
+  .diagrama { width: 100%; height: auto; }
+  .diagrama [data-parte] { transition: opacity .2s; }
+  .diagrama.foco [data-parte] { opacity: .18; }
+  .diagrama.foco [data-parte].visible { opacity: 1; }
+  .senal { background: var(--superficie); border: 1px solid var(--linea); border-radius: var(--r-chico); padding: 8px 10px 4px; }
+  .senal-titulo { font-size: .8rem; color: var(--acero); }
+  .senal svg { display: block; width: 100%; height: 56px; }
+  .rodamiento figcaption { font-size: .85rem; color: var(--acero); line-height: 1.45; }
+  .pausa { justify-self: start; font: inherit; font-size: .85rem; color: var(--tinta-2); background: none; border: 0; padding: 4px 0; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .pausa:focus-visible, .lista-partes li:focus-visible { outline: 2px solid var(--tinta); outline-offset: 3px; border-radius: 4px; }
+  .lista-partes li { cursor: default; }
+  .lista-partes { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+  .lista-partes li { display: grid; grid-template-columns: 18px 1fr; gap: 12px; align-items: start; }
+  .lista-partes .muestra { width: 18px; height: 18px; border-radius: 4px; margin-top: 3px; }
+  .lista-partes b { display: block; }
+  .lista-partes span { color: var(--tinta-2); font-size: .93rem; }
+  .lista-partes li.activa b::after { content: " (la de este ejemplo)"; font-weight: 500; color: var(--acero); }
+
+  .pantalla { margin-top: 32px; background: var(--superficie); border: 1px solid var(--linea); border-radius: 10px; padding: 22px 26px 18px; color: var(--tinta-2); }
+  .pantalla-cabecera { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-size: .9rem; margin-bottom: 6px; }
+  .pantalla-cabecera b { color: var(--tinta); font-weight: 600; }
+  .grafico-espectro { width: 100%; height: auto; display: block; }
+  .pantalla .cuadricula { stroke: var(--linea-suave); }
+  .pantalla .eje { fill: var(--acero); font-size: 12px; font-family: var(--fuente); }
+  .pantalla .eje-linea { stroke: var(--linea); }
+  .pantalla .espectro-linea { fill: none; stroke: var(--tinta); stroke-width: 1.4; stroke-linejoin: round; }
+  .pantalla .espectro-area { fill: rgba(21, 33, 47, .06); }
+  .pantalla .marca-falla { stroke-dasharray: 4 4; stroke-width: 1.3; }
+  .pantalla .marca-falla.marca-activa { stroke: var(--falla); }
+  .pantalla .marca-falla.marca-tenue { stroke: #A9B4BE; }
+  .pantalla .marca-texto { font-size: 12px; font-weight: 600; font-family: var(--fuente); }
+  .pantalla .marca-texto.marca-activa { fill: var(--falla); }
+  .pantalla .marca-texto.marca-tenue { fill: #8C98A3; }
+  .pantalla .anotacion-punto { fill: var(--superficie); stroke: var(--falla); stroke-width: 2.5; }
+  .pantalla .anotacion-guia { stroke: var(--falla); stroke-width: 1.2; }
+  .pantalla .anotacion-titulo { font-size: 16px; font-weight: 700; fill: var(--tinta); font-family: var(--fuente); }
+  .pantalla .anotacion-texto { font-size: 14px; fill: var(--tinta-2); font-family: var(--fuente); }
+  .pantalla-nota { font-size: .85rem; color: var(--acero); margin-top: 6px; max-width: 90ch; }
+
+  /* Quién lo usa */
+  .roles { display: grid; grid-template-columns: 1.25fr 1fr; gap: 20px; margin-top: 40px; }
+  .rol { background: var(--superficie); border: 1px solid var(--linea); border-radius: var(--r-medio); padding: 28px; display: grid; gap: 18px; align-content: start; }
+  .rol h3 { font-size: 1.3rem; font-weight: 700; font-stretch: 110%; }
+  .rol .donde { color: var(--acero); font-size: .9rem; margin-top: 2px; }
+  .rol ul { margin: 0; padding-left: 1.1rem; color: var(--tinta-2); display: grid; gap: 6px; }
+  .muestra-web { border: 1px solid var(--linea); border-radius: 6px; padding: 14px; background: var(--papel); }
+  .muestra-web p { font-size: .82rem; color: var(--acero); margin-bottom: 8px; }
+  .celdas { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; }
+  .celdas span { height: 28px; border-radius: 2px; background: var(--normal); }
+  .celdas .f { background: var(--falla); } .celdas .a { background: var(--anomalia); }
+  .celdas .s { background: repeating-linear-gradient(135deg, var(--sin-datos-fondo) 0 5px, #D5DBE0 5px 10px); }
+  .leyenda-mini { display: flex; gap: 14px; flex-wrap: wrap; font-size: .78rem; color: var(--acero); margin-top: 8px; }
+  .leyenda-mini i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+  .telefono { width: 230px; margin-inline: auto; border: 2px solid var(--tinta); border-radius: 26px; padding: 34px 12px 28px; background: var(--papel); }
+  .notificacion { background: var(--superficie); border-radius: 12px; padding: 12px; box-shadow: var(--sombra); font-size: .82rem; display: grid; gap: 4px; }
+  .notificacion b { font-size: .88rem; }
+  .notificacion .estado { justify-self: start; font-size: .74rem; }
+
+  /* Metas: ficha técnica */
+  .ficha { margin-top: 36px; background: var(--superficie); border: 1px solid var(--linea); border-radius: var(--r-medio); overflow: hidden; }
+  .ficha table { width: 100%; border-collapse: collapse; }
+  .ficha th, .ficha td { text-align: left; padding: 16px 22px; border-bottom: 1px solid var(--linea-suave); vertical-align: baseline; }
+  .ficha tr:last-child td { border-bottom: 0; }
+  .ficha th { font-size: .82rem; color: var(--acero); font-weight: 600; background: #FAFBFB; }
+  .ficha td:nth-child(2) { font-size: 1.5rem; font-weight: 700; font-stretch: 112%; white-space: nowrap; }
+  .ficha td:nth-child(3) { color: var(--tinta-2); font-size: .93rem; }
+  .ficha-nota { font-size: .85rem; color: var(--acero); margin-top: 12px; max-width: 80ch; }
+
+  /* Cierre */
+  .cierre { margin: 104px 0 0; padding: 56px 0; border-top: 2px solid var(--tinta); display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: center; }
+  .cierre h2 { font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 700; font-stretch: 115%; letter-spacing: -.02em; max-width: 24ch; }
+  .cierre p { color: var(--tinta-2); margin-top: 10px; max-width: 60ch; }
+  footer { border-top: 1px solid var(--linea); padding: 22px 0 36px; color: var(--acero); font-size: .85rem; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+  @media (max-width: 980px) {
+    .portada, .problema, .partes { grid-template-columns: 1fr; gap: 36px; }
+    .partes .rodamiento { max-width: 320px; }
+    .pasos { grid-template-columns: 1fr; gap: 26px; }
+    .paso { padding: 0 0 0 50px; }
+    .paso::before { position: absolute; left: 0; top: 0; }
+    .paso::after { top: 34px; bottom: -26px; left: 16px; right: auto; border-top: 0; border-left: 2px solid var(--tinta); }
+    .paso h3 { margin-top: 5px; }
+    .roles { grid-template-columns: 1fr; }
+    .cierre { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 720px) {
+    .nav-enlaces { display: none; }
+    .nav .btn { margin-left: auto; }
+    .pantalla { padding: 16px 12px 14px; }
+    .ficha th:nth-child(3), .ficha td:nth-child(3) { display: none; }
+    .ficha th, .ficha td { padding: 14px 16px; }
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-falla" viewBox="0 0 16 16"><path d="M5 1h6l4 4v6l-4 4H5l-4-4V5z" fill="currentColor"/><path d="M5.6 5.6l4.8 4.8M10.4 5.6l-4.8 4.8" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-reloj" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 4.5V8l2.4 1.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+  <symbol id="i-rodamiento" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="16" cy="16" r="6" fill="none" stroke="currentColor" stroke-width="3"/><g fill="#F2B705"><circle cx="16" cy="6" r="2.6"/><circle cx="25.5" cy="12.9" r="2.6"/><circle cx="21.9" cy="24.1" r="2.6"/><circle cx="10.1" cy="24.1" r="2.6"/><circle cx="6.5" cy="12.9" r="2.6"/></g></symbol>
+</svg>
+
+<div class="contenedor">
+  <header class="nav">
+    <a class="marca" href="#">
+      <svg width="30" height="30"><use href="#i-rodamiento"/></svg>
+      <span class="marca-nombre">Monitoreo de rodamientos</span>
+    </a>
+    <nav class="nav-enlaces" aria-label="Secciones">
+      <a href="#problema">El problema</a>
+      <a href="#como-funciona">Cómo funciona</a>
+      <a href="#metas">Metas</a>
+    </nav>
+    <a class="btn btn-primario" href="app.html">Ver el prototipo</a>
+  </header>
+
+  <main>
+    <section class="portada">
+      <div>
+        <p class="contexto">Trabajo de investigación de Ingeniería de Software, UPC</p>
+        <h1>Detectar la falla del rodamiento antes de que pare la máquina</h1>
+        <p class="bajada">Un sistema que analiza la vibración de la maquinaria pesada con inteligencia artificial y avisa al equipo de mantenimiento qué está fallando, con qué urgencia y qué revisar.</p>
+        <div class="botones">
+          <a class="btn btn-primario btn-grande" href="app.html">Ver el prototipo</a>
+          <a class="btn btn-secundario btn-grande" href="#como-funciona">Cómo funciona</a>
+        </div>
+      </div>
+
+      <figure class="ejemplo" style="margin:0">
+        <article class="tarjeta-alerta" aria-label="Ejemplo de alerta">
+          <div class="fila">
+            <span class="estado estado-falla"><svg><use href="#i-falla"/></svg>Falla identificada</span>
+            <span class="plazo"><svg><use href="#i-reloj"/></svg>Revisar hoy</span>
+          </div>
+          <div>
+            <h2>Cargador frontal CF-02</h2>
+            <p class="que">Desgaste probable en el rodamiento del motor</p>
+          </div>
+          <dl>
+            <div><dt>Por qué</dt><dd>Su vibración se triplicó en 9 días y repite el patrón de un daño en la pista externa.</dd></div>
+            <div><dt>Qué revisar</dt><dd>La lubricación y la holgura. Si se confirma el desgaste, cambiar el rodamiento.</dd></div>
+          </dl>
+          <span class="btn btn-primario" aria-hidden="true">Asignar a un técnico</span>
+        </article>
+        <figcaption class="ejemplo-pie">Así llega una alerta al jefe de mantenimiento. Datos de ejemplo.</figcaption>
+      </figure>
+    </section>
+
+    <section class="bloque problema" id="problema">
+      <div>
+        <h2>Hoy la falla se descubre cuando la máquina ya se detuvo</h2>
+        <p class="intro">En muchas entidades públicas peruanas la maquinaria pesada se repara después de que falla, en plena obra. Un rodamiento dañado cambia su vibración con días o semanas de anticipación, pero nadie la está midiendo de forma continua.</p>
+      </div>
+      <div class="contraste">
+        <div><h3>Sin el sistema</h3><p>La máquina se detiene, se pierde la jornada y la reparación es más cara porque el daño ya avanzó.</p></div>
+        <div class="con"><h3>Con el sistema</h3><p>La alerta llega cuando el desgaste empieza y el equipo programa la revisión antes de la parada.</p></div>
+      </div>
+    </section>
+
+    <section class="bloque" id="como-funciona">
+      <h2>De la vibración a la reparación verificada</h2>
+      <p class="intro">Cada máquina envía sus mediciones al servidor, que las analiza y avisa solo cuando hay algo que revisar.</p>
+      <ol class="pasos">
+        <li class="paso"><h3>Recibe la señal</h3><p>Los sensores de cada máquina envían su vibración, temperatura y corriente.</p><small>Adquisición de datos, por MQTT</small></li>
+        <li class="paso"><h3>Detecta lo anormal</h3><p>Un modelo que aprendió cómo vibra una máquina sana reconoce cuándo algo cambia.</p><small>Detección de estado</small></li>
+        <li class="paso"><h3>Identifica la falla</h3><p>Indica qué parte del rodamiento está dañada y muestra la evidencia.</p><small>Evaluación de salud, con CNN-LSTM</small></li>
+        <li class="paso"><h3>Avisa al responsable</h3><p>El jefe de mantenimiento lo ve en la web y el técnico recibe la alerta en el celular.</p><small>Generación de recomendaciones</small></li>
+        <li class="paso"><h3>Registra y verifica</h3><p>El técnico anota la reparación y las mediciones siguientes confirman si la máquina quedó bien.</p><small>Seguimiento</small></li>
+      </ol>
+    </section>
+
+    <section class="bloque" id="evidencia">
+      <h2>Cómo sabe qué parte del rodamiento falla</h2>
+      <p class="intro">Cuando una parte del rodamiento se daña, golpea a un ritmo propio que depende de su forma y de la velocidad de giro. El sistema busca esos ritmos en la vibración: el que aparece indica la parte dañada.</p>
+      <div class="partes">
+        <figure class="rodamiento">
+          <svg class="diagrama" id="diagrama" viewBox="0 0 300 300" role="img" aria-label="Rodamiento visto de frente con una grieta en la pista externa: cada vez que una bola pasa por la grieta se produce un golpe">
+            <circle data-parte="externa" cx="150" cy="150" r="128" fill="none" stroke="#F2B705" stroke-width="24"/>
+            <g transform="rotate(-45 150 150)">
+              <circle id="onda" cx="266" cy="150" r="6" fill="none" stroke="#B42318" stroke-width="2.5" opacity="0"/>
+              <path id="grieta" data-parte="externa" d="M 266 150 l 6 -4 l 5 6 l 6 -5 l 6 4" fill="none" stroke="#B42318" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </g>
+            <g id="jaula">
+              <circle data-parte="jaula" cx="150" cy="150" r="94" fill="none" stroke="#8FA1B3" stroke-width="4" stroke-dasharray="10 6"/>
+              <g data-parte="bolas" fill="#24364A">
+                <circle cx="150" cy="56" r="20"/><circle cx="216.5" cy="83.5" r="20"/><circle cx="244" cy="150" r="20"/><circle cx="216.5" cy="216.5" r="20"/>
+                <circle cx="150" cy="244" r="20"/><circle cx="83.5" cy="216.5" r="20"/><circle cx="56" cy="150" r="20"/><circle cx="83.5" cy="83.5" r="20"/>
+              </g>
+            </g>
+            <g id="interna">
+              <circle data-parte="interna" cx="150" cy="150" r="60" fill="none" stroke="#5B6875" stroke-width="18"/>
+              <circle cx="150" cy="150" r="42" fill="#E7EBEE"/>
+              <rect x="145" y="108" width="10" height="9" rx="1.5" fill="#5B6875"/>
+            </g>
+            <text x="150" y="155" text-anchor="middle" font-size="13" fill="#5B6875" font-family="Archivo, sans-serif">eje</text>
+          </svg>
+          <div class="senal">
+            <span class="senal-titulo">Lo que mide el sensor</span>
+            <svg id="senal" viewBox="0 0 300 64" preserveAspectRatio="none" aria-hidden="true">
+              <line x1="0" x2="300" y1="38" y2="38" stroke="#E7EBEE" stroke-width="1"/>
+              <g id="senal-marcas"></g>
+              <path id="senal-linea" fill="none" stroke="#24364A" stroke-width="1.5" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <figcaption>Más lento que en la realidad: cada vez que una bola pasa por la grieta hay un golpe. En el motor del ejemplo son unos 76 golpes por segundo, y ese ritmo es el pico rojo del espectro de abajo.</figcaption>
+          <button type="button" class="pausa" id="pausa" aria-pressed="false">Pausar animación</button>
+        </figure>
+        <ul class="lista-partes">
+          <li class="activa" tabindex="0" data-parte="externa"><span class="muestra" style="background:#F2B705"></span><div><b>Pista externa</b><span>El aro de afuera, fijo a la máquina. Su ritmo de falla se llama BPFO.</span></div></li>
+          <li tabindex="0" data-parte="interna"><span class="muestra" style="background:#5B6875"></span><div><b>Pista interna</b><span>El aro que gira con el eje. Ritmo BPFI.</span></div></li>
+          <li tabindex="0" data-parte="bolas"><span class="muestra" style="background:#24364A"></span><div><b>Elementos rodantes</b><span>Las bolas que ruedan entre los dos aros. Ritmo BSF.</span></div></li>
+          <li tabindex="0" data-parte="jaula"><span class="muestra" style="background:#8FA1B3"></span><div><b>Jaula</b><span>Mantiene separadas las bolas. Ritmo FTF.</span></div></li>
+        </ul>
+      </div>
+
+      <figure class="pantalla" style="margin-inline:0">
+        <div class="pantalla-cabecera">
+          <span><b>Cargador frontal CF-02</b>: vibración separada por ritmos (espectro)</span>
+        </div>
+        <div id="espectro"></div>
+        <figcaption class="pantalla-nota">Cada pico es una vibración que se repite a ese ritmo. Las líneas punteadas marcan el ritmo de cada parte; las rojas, el de la pista externa. Aquí los picos coinciden con la pista externa y sus múltiplos, por eso el sistema señala esa parte. Datos sintéticos de ejemplo.</figcaption>
+      </figure>
+    </section>
+
+    <section class="bloque" id="quien-lo-usa">
+      <h2>Dos aplicaciones, una para cada trabajo</h2>
+      <div class="roles">
+        <article class="rol">
+          <div>
+            <h3>Jefe de mantenimiento</h3>
+            <p class="donde">Aplicación web, desde la oficina</p>
+          </div>
+          <div class="muestra-web" aria-hidden="true">
+            <p>Estado de 12 máquinas</p>
+            <div class="celdas"><span class="f"></span><span class="a"></span><span class="a"></span><span class="s"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="leyenda-mini"><span><i style="background:var(--falla)"></i>Falla</span><span><i style="background:var(--anomalia)"></i>Anomalía</span><span><i style="background:#D5DBE0"></i>Sin datos</span><span><i style="background:var(--normal)"></i>Normal</span></div>
+          </div>
+          <ul>
+            <li>Ve el estado de todas las máquinas en una sola pantalla.</li>
+            <li>Revisa por qué se generó cada alerta y asigna al técnico.</li>
+            <li>Consulta la disponibilidad de cada máquina y exporta reportes.</li>
+          </ul>
+        </article>
+        <article class="rol">
+          <div>
+            <h3>Técnico en campo</h3>
+            <p class="donde">Aplicación móvil, junto a la máquina</p>
+          </div>
+          <div class="telefono" aria-hidden="true">
+            <div class="notificacion">
+              <span class="estado estado-falla"><svg><use href="#i-falla"/></svg>Revisar hoy</span>
+              <b>Cargador frontal CF-02</b>
+              <span>Desgaste probable en el rodamiento del motor. Toca para ver qué revisar.</span>
+            </div>
+          </div>
+          <ul>
+            <li>Recibe la alerta aunque tenga la aplicación cerrada.</li>
+            <li>Revisa el historial de la máquina antes de intervenir.</li>
+            <li>Registra lo que hizo, aun sin conexión.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="bloque" id="metas">
+      <h2>Metas del proyecto</h2>
+      <p class="intro">Los valores que el sistema debe alcanzar al validarse con datasets públicos de rodamientos, como PRONOSTIA.</p>
+      <div class="ficha">
+        <table>
+          <thead><tr><th>Indicador</th><th>Meta</th><th>Qué significa</th></tr></thead>
+          <tbody>
+            <tr><td>Tiempo de la medición a la alerta</td><td>&lt; 1 s</td><td>Desde que llega la señal hasta que la alerta está disponible.</td></tr>
+            <tr><td>Tiempo de análisis por tramo de señal</td><td>&lt; 100 ms</td><td>Lo que tarda el modelo en evaluar cada tramo.</td></tr>
+            <tr><td>Falsas alarmas</td><td>&lt; 5 %</td><td>Alertas que, al revisarse, no correspondían a una falla.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="ficha-nota">Son metas del trabajo de investigación, no resultados medidos. La arquitectura sigue los bloques funcionales de la norma ISO 13374-1.</p>
+    </section>
+
+    <section class="cierre">
+      <div>
+        <h2>El sistema alerta. La decisión es del equipo técnico.</h2>
+        <p>Ninguna acción sobre la máquina es automática: cada alerta llega con su evidencia para que el personal decida si interviene.</p>
+      </div>
+      <a class="btn btn-primario btn-grande" href="app.html">Ver el prototipo</a>
+    </section>
+  </main>
+
+  <footer>
+    <span>Trabajo de investigación de Ingeniería de Software, UPC.</span>
+    <span>Autores: Kevin Chi Cruzatt y Manuel Tumi Oliden</span>
+  </footer>
+</div>
+
+<script src="graficos.js"></script>
+<script>
+  const datos = Graficos.espectro({ semilla: 11, falla: 'bpfo', severidad: 1 });
+  const caja = document.getElementById('espectro');
+  const pintar = animar => Graficos.dibujarEspectro(caja, datos, {
+    falla: 'bpfo', mostrar: ['bpfo', 'bpfi', 'bsf', 'ftf'], anotar: true, animar,
+    alto: Math.max(260, Math.min(360, caja.clientWidth * 0.32)),
+    textoAnotacion: 'Coincide con su ritmo y sus múltiplos',
+    etiqueta: 'Espectro de ejemplo: los picos coinciden con el ritmo de falla de la pista externa y sus múltiplos' });
+  // El espectro se dibuja una vez, cuando la sección entra en pantalla.
+  pintar(false);
+  if ('IntersectionObserver' in window) {
+    const obs = new IntersectionObserver(e => { if (e[0].isIntersecting) { pintar(true); obs.disconnect(); } }, { threshold: .4 });
+    obs.observe(caja);
+  }
+  let espera;
+  addEventListener('resize', () => { clearTimeout(espera); espera = setTimeout(() => pintar(false), 150); });
+
+  /* Rodamiento animado (ralentizado). Pista externa fija; la interna gira con el eje
+     y la jaula a 0.38 de esa velocidad (FTF). Con 8 bolas, una pasa por la grieta
+     cada 45° de giro de la jaula: ese golpe repetido es el ritmo BPFO. */
+  (function () {
+    const GIRO_EJE = 72;                 // grados por segundo (una vuelta cada 5 s)
+    const GIRO_JAULA = GIRO_EJE * 0.38;
+    const PERIODO = 45 / GIRO_JAULA;     // segundos entre golpes
+    const VENTANA = 8;                   // segundos visibles en la señal
+    const diagrama = document.getElementById('diagrama');
+    const jaula = document.getElementById('jaula'), interna = document.getElementById('interna');
+    const onda = document.getElementById('onda'), grieta = document.getElementById('grieta');
+    const linea = document.getElementById('senal-linea'), marcas = document.getElementById('senal-marcas');
+    const boton = document.getElementById('pausa');
+    const quieto = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const ruido = s => 0.07 * (Math.sin(s * 37.1) + Math.sin(s * 91.7 + 1.3) + Math.sin(s * 53.3 + 2.1)) / 3;
+    const respuesta = s => {               // golpe: vibración que se apaga rápido
+      const fase = ((s % PERIODO) + PERIODO) % PERIODO;
+      return Math.exp(-fase / 0.11) * Math.sin(2 * Math.PI * 13 * fase);
+    };
+
+    function dibujar(t) {
+      jaula.setAttribute('transform', `rotate(${(t * GIRO_JAULA) % 360} 150 150)`);
+      interna.setAttribute('transform', `rotate(${(t * GIRO_EJE) % 360} 150 150)`);
+      const edad = t % PERIODO;
+      onda.setAttribute('r', 6 + edad * 46);
+      onda.setAttribute('opacity', Math.max(0, 1 - edad / 0.7));
+      grieta.setAttribute('stroke-width', 3 + Math.max(0, 3 * (1 - edad / 0.3)));
+
+      let d = '';
+      for (let i = 0; i <= 240; i++) {
+        const s = t - VENTANA + (i / 240) * VENTANA;
+        const v = s < 0 ? ruido(s) : ruido(s) + respuesta(s);
+        d += (i ? 'L' : 'M') + (i * 300 / 240).toFixed(1) + ' ' + (38 - v * 30).toFixed(1);
+      }
+      linea.setAttribute('d', d);
+      let m = '';
+      for (let k = Math.ceil((t - VENTANA) / PERIODO); k * PERIODO <= t; k++) {
+        if (k < 0) continue;
+        const x = ((k * PERIODO - (t - VENTANA)) / VENTANA * 300).toFixed(1);
+        m += `<line x1="${x}" x2="${x}" y1="2" y2="9" stroke="#B42318" stroke-width="2"/>`;
+      }
+      marcas.innerHTML = m;
+    }
+
+    let t = PERIODO * 5 + 0.12, previo = null, visible = false, pausado = quieto;
+    function cuadro(ahora) {
+      if (previo != null) t += Math.min(0.1, (ahora - previo) / 1000);
+      previo = ahora;
+      dibujar(t);
+      if (visible && !pausado) requestAnimationFrame(cuadro); else previo = null;
+    }
+    const arrancar = () => { if (visible && !pausado && previo == null) requestAnimationFrame(cuadro); };
+
+    dibujar(t);
+    if (quieto) boton.hidden = true;
+    boton.addEventListener('click', () => {
+      pausado = !pausado;
+      boton.textContent = pausado ? 'Reanudar animación' : 'Pausar animación';
+      boton.setAttribute('aria-pressed', pausado);
+      arrancar();
+    });
+    // Solo se anima mientras está en pantalla.
+    new IntersectionObserver(e => { visible = e[0].isIntersecting; arrancar(); }).observe(diagrama);
+
+    // Al pasar sobre una parte de la lista, se resalta en el dibujo.
+    document.querySelectorAll('.lista-partes li').forEach(li => {
+      const encender = () => {
+        diagrama.classList.add('foco');
+        diagrama.querySelectorAll('[data-parte]').forEach(n => n.classList.toggle('visible', n.dataset.parte === li.dataset.parte));
+      };
+      const apagar = () => diagrama.classList.remove('foco');
+      li.addEventListener('mouseenter', encender); li.addEventListener('focus', encender);
+      li.addEventListener('mouseleave', apagar); li.addEventListener('blur', apagar);
+    });
+  })();
+</script>
+</body>
+</html>

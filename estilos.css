@@ -1,0 +1,76 @@
+/* Sistema de diseño compartido: app web y landing.
+   Tinta de plano + amarillo de maquinaria; estados con color, ícono y texto. */
+:root {
+  --tinta: #15212F;
+  --tinta-2: #24364A;
+  --papel: #F2F4F5;
+  --superficie: #FFFFFF;
+  --linea: #D6DCE1;
+  --linea-suave: #E7EBEE;
+  --acero: #5B6875;
+  --amarillo: #F2B705;
+  --amarillo-suave: #FFF4CC;
+
+  --normal: #23704F;
+  --normal-fondo: #E3F1EA;
+  --anomalia: #B45309;
+  --anomalia-fondo: #FDF0E1;
+  --falla: #B42318;
+  --falla-fondo: #FBE7E5;
+  --sin-datos: #5F6B76;
+  --sin-datos-fondo: #ECEFF1;
+
+  --fuente: "Archivo", system-ui, sans-serif;
+  --r-chico: 4px;
+  --r-medio: 8px;
+  --sombra: 0 1px 2px rgba(21, 33, 47, .06), 0 2px 8px rgba(21, 33, 47, .04);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: var(--fuente);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--tinta);
+  background: var(--papel);
+  font-variant-numeric: tabular-nums;
+}
+h1, h2, h3 { margin: 0; line-height: 1.15; }
+p { margin: 0; }
+a { color: inherit; }
+button { font: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--amarillo); outline-offset: 2px; border-radius: 2px; }
+
+/* Botones */
+.btn {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .6rem 1rem; border-radius: var(--r-chico);
+  border: 1px solid transparent; font-weight: 600; text-decoration: none;
+  transition: background-color .15s, border-color .15s;
+}
+.btn-primario { background: var(--amarillo); color: var(--tinta); }
+.btn-primario:hover { background: #E0A800; }
+.btn-secundario { background: var(--superficie); border-color: var(--linea); color: var(--tinta); }
+.btn-secundario:hover { border-color: var(--acero); }
+
+/* Estado: siempre ícono + texto, nunca solo color */
+.estado {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .15rem .55rem .15rem .4rem; border-radius: 999px;
+  font-size: .82rem; font-weight: 600; white-space: nowrap;
+}
+.estado svg { width: 14px; height: 14px; flex: none; }
+.estado-normal { color: var(--normal); background: var(--normal-fondo); }
+.estado-anomalia { color: var(--anomalia); background: var(--anomalia-fondo); }
+.estado-falla { color: var(--falla); background: var(--falla-fondo); }
+.estado-sin-datos { color: var(--sin-datos); background: var(--sin-datos-fondo); }
+
+/* Marca */
+.marca { display: flex; align-items: center; gap: .6rem; text-decoration: none; }
+.marca-nombre { font-weight: 700; font-stretch: 112%; letter-spacing: -.01em; line-height: 1.1; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
