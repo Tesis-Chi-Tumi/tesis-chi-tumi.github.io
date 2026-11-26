@@ -244,7 +244,7 @@
       <p class="intro">Cuando una parte del rodamiento se daña, golpea a un ritmo propio que depende de su forma y de la velocidad de giro. El sistema busca esos ritmos en la vibración: el que aparece indica la parte dañada.</p>
       <div class="partes">
         <figure class="rodamiento">
-          <svg class="diagrama" id="diagrama" viewBox="0 0 300 300" role="img" aria-label="Rodamiento visto de frente con una grieta en la pista externa: cada vez que una bola pasa por la grieta se produce un golpe">
+          <svg class="diagrama" id="diagrama" viewBox="0 0 300 300" role="img" aria-label="Rodamiento visto de frente con una grieta en la pista externa: cada vez que una esfera pasa por la grieta se produce un golpe">
             <circle data-parte="externa" cx="150" cy="150" r="128" fill="none" stroke="#F2B705" stroke-width="24"/>
             <g transform="rotate(-45 150 150)">
               <circle id="onda" cx="266" cy="150" r="6" fill="none" stroke="#B42318" stroke-width="2.5" opacity="0"/>
@@ -272,14 +272,14 @@
               <path id="senal-linea" fill="none" stroke="#24364A" stroke-width="1.5" stroke-linejoin="round"/>
             </svg>
           </div>
-          <figcaption>Más lento que en la realidad: cada vez que una bola pasa por la grieta hay un golpe. En el motor del ejemplo son unos 76 golpes por segundo, y ese ritmo es el pico rojo del espectro de abajo.</figcaption>
+          <figcaption>Más lento que en la realidad: cada vez que una esfera pasa por la grieta hay un golpe. En el motor del ejemplo son unos 76 golpes por segundo, y ese ritmo es el pico rojo del espectro de abajo.</figcaption>
           <button type="button" class="pausa" id="pausa" aria-pressed="false">Pausar animación</button>
         </figure>
         <ul class="lista-partes">
           <li class="activa" tabindex="0" data-parte="externa"><span class="muestra" style="background:#F2B705"></span><div><b>Pista externa</b><span>El aro de afuera, fijo a la máquina. Su ritmo de falla se llama BPFO.</span></div></li>
           <li tabindex="0" data-parte="interna"><span class="muestra" style="background:#5B6875"></span><div><b>Pista interna</b><span>El aro que gira con el eje. Ritmo BPFI.</span></div></li>
-          <li tabindex="0" data-parte="bolas"><span class="muestra" style="background:#24364A"></span><div><b>Elementos rodantes</b><span>Las bolas que ruedan entre los dos aros. Ritmo BSF.</span></div></li>
-          <li tabindex="0" data-parte="jaula"><span class="muestra" style="background:#8FA1B3"></span><div><b>Jaula</b><span>Mantiene separadas las bolas. Ritmo FTF.</span></div></li>
+          <li tabindex="0" data-parte="bolas"><span class="muestra" style="background:#24364A"></span><div><b>Elementos rodantes</b><span>Las esferas que ruedan entre los dos aros. Ritmo BSF.</span></div></li>
+          <li tabindex="0" data-parte="jaula"><span class="muestra" style="background:#8FA1B3"></span><div><b>Jaula</b><span>Mantiene separadas las esferas. Ritmo FTF.</span></div></li>
         </ul>
       </div>
 
@@ -382,7 +382,7 @@
   addEventListener('resize', () => { clearTimeout(espera); espera = setTimeout(() => pintar(false), 150); });
 
   /* Rodamiento animado (ralentizado). Pista externa fija; la interna gira con el eje
-     y la jaula a 0.38 de esa velocidad (FTF). Con 8 bolas, una pasa por la grieta
+     y la jaula a 0.38 de esa velocidad (FTF). Con 8 esferas, una pasa por la grieta
      cada 45° de giro de la jaula: ese golpe repetido es el ritmo BPFO. */
   (function () {
     const GIRO_EJE = 72;                 // grados por segundo (una vuelta cada 5 s)
